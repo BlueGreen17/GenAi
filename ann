@@ -1,0 +1,93 @@
+pip install pydot
+from tensorflow import keras
+from keras.datasets import mnist # MNIST dataset is included in Keras
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+print("X_train shape", X_train.shape)
+print("y_train shape", y_train.shape)
+print("X_test shape", X_test.shape)
+print("y_test shape", y_test.shape)
+# Plot first few images
+import matplotlib.pyplot as plt
+for i in range(9):
+# define subplot
+plt.subplot(3,3,i+1) # 3 rows, 3 col, pos
+# plot raw pixel data
+plt.imshow(X_train[i], cmap='gray')
+# show the figure
+plt.show()
+# Each pixel is an 8-bit integer from 0-255 (0 is full black, 255 is full white)
+# single-channel pixel or monochrome image
+X_train[i][10:20,10:20]
+# reshape 28 x 28 matrices into 784-length vectors
+X_train = X_train.reshape(60000, 784)
+X_test = X_test.reshape(10000, 784)
+# normalize each value for each pixel for the entire vector for each input
+# change integers to 32-bit floating point numbers
+X_train = X_train.astype('float32')
+X_test = X_test.astype('float32')
+# normalize by dividing by largest pixel value
+X_train /= 255
+X_test /= 255
+print("Training matrix shape", X_train.shape)
+print("Testing matrix shape", X_test.shape)
+# Sequential keras model with Dense layes (DIY)
+from keras.models import Sequential # Model type to be used
+from keras.layers import Dense # Types of layers to be used in our model
+from keras import activations
+loss_fn=keras.losses.CategoricalCrossentropy(
+
+from_logits=False,
+)
+mdl = Sequential()
+# Input layer with 64 units and relu activation
+mdl.add(Dense(units=64, input_shape=(784,), activation=activations.relu))
+# Hidden layer with 32 units and relu activation
+mdl.add(Dense(units=32, activation='relu'))
+# Output layer with 10 units and softmax activation
+mdl.add(Dense(units=10, activation='softmax'))
+# Compile model
+mdl.compile(
+run_eagerly=True,
+optimizer="adam",
+loss=loss_fn, metrics = ['accuracy']
+)
+[ ]: # Visualize the model
+from keras.utils import plot_model
+input_shape = (64,)
+mdl.build(input_shape)
+plot_model(
+mdl, show_shapes=True, show_layer_names=False
+)
+[156]: # Display model summary
+mdl.summary()
+#understand model summary
+784*64 + 64
+from tensorflow.keras.utils import to_categorical
+y_train1 = to_categorical(y_train)
+y_test1 = to_categorical(y_test)
+print(y_test[6])
+print(y_test1[6,:])
+ Train the model
+epochs=10
+batch = 64
+history = mdl.fit(
+X_train,
+y_train1,
+epochs=epochs,
+batch_size=batch,
+verbose=1,
+validation_data=(X_test, y_test1)
+)
+print(history.history.keys())
+epochRange = range(1,epochs+1);
+plt.plot(epochRange,history.history['loss'])
+plt.plot(epochRange,history.history['val_loss'])
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.grid()
+plt.xlim((1,epochs))
+plt.legend(['Train','Test'])
+plt.show()
+from sklearn.metrics import confusion_matrix
+print('Confusion Matrix:')
+print(confusion_matrix(y_test, yhat_test_mdl))
