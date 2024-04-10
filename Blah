@@ -1,0 +1,57 @@
+
+import tensorflow as tf
+from tensorflow.keras.layers import Dense, Flatten, Dropout
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.datasets import mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+x_train, x_test = x_train / 255.0, x_test / 255.0  # Normalize the data
+
+def create_model(hidden_layers=1, l2_reg=False, dropout=False):
+    model = Sequential()
+    model.add(Flatten(input_shape=(28, 28)))
+    
+    for _ in range(hidden_layers):
+        if l2_reg:
+            model.add(Dense(128, activation='relu', kernel_regularizer=l2(0.001)))
+        else:
+            model.add(Dense(128, activation='relu'))
+        
+        if dropout:
+            model.add(Dropout(0.2))
+    
+    model.add(Dense(10, activation='softmax'))
+    
+    model.compile(optimizer='adam',
+                  loss='sparse_categorical_crossentropy',
+                  metrics=['accuracy'])
+    return model
+
+epochs = 10
+
+# Base model
+base_model = create_model()
+base_history = base_model.fit(x_train, y_train, epochs=epochs, validation_data=(x_test, y_test))
+
+# Model with L2 regularization
+l2_model = create_model(l2_reg=True)
+l2_history = l2_model.fit(x_train, y_train, epochs=epochs, validation_data=(x_test, y_test))
+
+# Model with Dropout
+dropout_model = create_model(dropout=True)
+dropout_history = dropout_model.fit(x_train, y_train, epochs=epochs, validation_data=(x_test, y_test))
+
+# Model with more hidden layers
+deep_model = create_model(hidden_layers=3)
+deep_history = deep_model.fit(x_train, y_train, epochs=epochs, validation_data=(x_test, y_test))
+import matplotlib.pyplot as plt
+
+plt.plot(base_history.history['val_accuracy'], label='Base')
+plt.plot(l2_history.history['val_accuracy'], label='L2 Regularization')
+plt.plot(dropout_history.history['val_accuracy'], label='Dropout')
+plt.plot(deep_history.history['val_accuracy'], label='Deeper Model')
+plt.title('Model accuracy comparison')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(loc='upper left')
+plt.show()
